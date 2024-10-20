@@ -1,0 +1,245 @@
+Problem #1: Parse Tree and Left most derivation
+
+A = B * (C * (A + B))
+
+
+                Statement
+                    |
+                    |
+                Assignment
+                    |
+                    |
+    ------------------------------------------
+    |               |                         |
+    |               |                         |
+Identifier          |                     Expression
+    |               |                         |
+    |               |                         |
+    |               |                        Term
+    |               |                         |            
+    |               |                         |            
+    |               |          ---------------------------------------
+    |               |          |         |                           |
+    |               |          |         |                           |
+    |               |        Term        |                         Factor
+    |               |          |         |                           |
+    |               |          |         |                           |
+    |               |        Factor      |      -----------------------------------------------------------------------------------
+    |               |          |         |      |                    |                                                             |
+    |               |          |         |      |                    |                                                             |
+    |               |      Identifier    |      |                Expression                                                        |
+    |               |          |         |      |                    |                                                             |
+    |               |          |         |      |                    |                                                             |
+    |               |          |         |      |                   Term                                                           |
+    |               |          |         |      |                    |                                                             |
+    |               |          |         |      |                    |                                                             |
+    |               |          |         |      |       ----------------------------------------------                             |
+    |               |          |         |      |       |            |                               |                             |
+    |               |          |         |      |       |            |                               |                             |
+    |               |          |         |      |      Term          |                             Factor                          |    
+    |               |          |         |      |       |            |                               |                             |
+    |               |          |         |      |       |            |                               |                             |
+    |               |          |         |      |     Factor         |        ------------------------------------------------     |
+    |               |          |         |      |       |            |        |                      |                       |     |
+    |               |          |         |      |       |            |        |                      |                       |     |
+    |               |          |         |      |       |            |        |                  Expression                  |     |
+    |               |          |         |      |       |            |        |                      |                       |     |
+    |               |          |         |      |       |            |        |                      |                       |     |
+    |               |          |         |      |       |            |        |         ----------------------------         |     |
+    |               |          |         |      |       |            |        |         |            |             |         |     |
+    |               |          |         |      |       |            |        |         |            |             |         |     |
+    |               |          |         |      |       |            |        |     Expression       |           Term        |     |
+    |               |          |         |      |       |            |        |         |            |             |         |     |
+    |               |          |         |      |       |            |        |         |            |             |         |     |
+    |               |          |         |      |       |            |        |        Term          |           Factor      |     |
+    |               |          |         |      |       |            |        |         |            |             |         |     |
+    |               |          |         |      |       |            |        |         |            |             |         |     |
+    |               |          |         |      |       |            |        |       Factor         |         Identifier    |     |
+    |               |          |         |      |       |            |        |         |            |             |         |     |
+    |               |          |         |      |       |            |        |         |            |             |         |     |
+    |               |          |         |      |       |            |        |     Identifier       |             |         |     |
+    |               |          |         |      |       |            |        |         |            |             |         |     |
+    |               |          |         |      |       |            |        |         |            |             |         |     |
+                                                                                                                                    
+    A               =          B         *      (       C            *        (         A            +             B         )     )
+
+
+Problem #2
+
+(a) static scope                            180
+
+    ----------|----------
+              | u = 42
+              | v = 69
+    add       | w = 17
+    ----------|----------
+              | u = 42
+              | v = 69
+    bar       | w = 17
+    ----------|----------
+              | u = 42
+              | v = 69
+    foo       | w = 17
+    ----------|----------
+              | u = 42
+              | v = 69
+    main      | w = 17
+    ----------|----------
+
+        Thought Process:
+
+            Global:
+                u = 42
+                v = 69
+                w = 17
+            
+            add(z)
+                u = v + u + z
+
+                where the variables are 
+                    global u = 42
+                    global v = 69
+                    local z = global v = 69
+
+            bar()
+                a new local variable u is created in bar = global w = 17
+                calls add(v) using global v = 69
+
+            foo(x = 42, w = 13)
+                a new local variable v is created in foo = local x = 42
+                calls bar(add)
+
+            main
+                calls foo(u, 13) using global u = 42
+                print(u) prints out global u which is 42 + 69 + 69 = 180
+
+
+(b) dynamic scope deep binding              126
+
+    ----------|----------
+              | u = 42
+              | v = 42
+    add       | w = 13
+    ----------|----------
+              | u = 42
+              | v = 42
+    bar       | w = 13
+    ----------|----------
+              | u = 42
+              | v = 42
+    foo       | w = 13
+    ----------|----------
+              | u = 42
+              | v = 69
+    main      | w = 17
+    ----------|----------
+
+        Deep binding binds the environment at the time the function is passed as an argument
+        
+        Thought Process: 
+            Global:
+                u = 42
+                v = 69
+                w = 17
+
+            add(z)
+                u = v + u + z
+
+                where the variables are:
+                    global u = 42
+                    local v from foo = 42
+                    local z = local v from foo = 42
+
+            bar
+                declared new u variable = local w in foo = 13
+                calls add(v) where v is taken from foo = 42
+
+            foo(x = 42, w = 13)
+                declare new local variable v = local x = 42
+                bar(add)
+                    Function is passed as argument and binds scope of the variables
+                        u = 42
+                        v = 42
+                        w = 13
+
+            main
+                calls foo(u, 13) where u is global u = 42
+                print(u) where global u = 42 + 42 + 42 = 126
+
+(c) dynamic scope shallow binding            97 (or could be 101)
+
+    ----------|----------
+              | u = 13
+              | v = 42
+    add       | w = 13
+    ----------|----------
+              | u = 13
+              | v = 42
+    bar       | w = 13
+    ----------|----------
+              | u = 42
+              | v = 42
+    foo       | w = 13
+    ----------|----------
+              | u = 42
+              | v = 69
+    main      | w = 17
+    ----------|----------
+
+        Shallow binding binds the environment when the function (that was passed as an argument) is actually called
+
+        Global:
+            u = 42
+            v = 69
+            w = 17
+        
+        add(z)
+            u = v + u + z
+
+                where the variables are
+                    local u from bar = 13
+                    local v from foo = 42
+                    local z = local v from foo = 42
+
+        bar
+            declare new local variable u = local w = 13
+            calls add(v)
+                Function that was passed as an argument is called and binds scope
+                    u = 13
+                    v = 42
+                    w = 13
+
+        foo(x = 42, w = 13)
+            declare new local variable v = local x = 42
+            calls bar(add)
+
+        main
+            calls foo(u, 13) where u is global u = 42
+            print(u) will print local u from bar = 13 + 42 + 42 = 97
+                Or it could be u = 17 + 42 + 42 = 101
+
+
+Problem #4: Rubik's Cube
+
+Considering rotation:
+
+A 2D array for each face of a Rubik's Cube
+With different faces, we can move rows and columns between arrays to represent rotation
+The rotating of the face itself would require rearranging the colors in the 2D array
+    
+Assuming the cube's orientation is:
+Starting with the front face (red) as the main face facing forward
+The upper face is always facing up, and the down face always facing down
+    
+A Rubik's Cube has 3 different axes on which we can rotate the faces
+Some rotations do the exact same thing, such as rotating a column in the front face up is the same as rotating that column in the back face down.
+Therefore, we don't need to consider certain rotations done on the back face because it could also be done by using the front face as the main face
+One rotation we do need to consider is the rotation of the back face itself
+Rotating columns up/down (or clockwise/counterclockwise) on the front face would only use columns for all related faces
+Rotating rows clockwise/counterclockwise (or left/right) would use rows for all related faces
+Note: clockwise/counterclockwise is determined by having the face we're rotating facing forward
+
+Rotation of the front face itself and the columns behind it can be done by "rearranging" the faces
+Instead of having the front face, we can have the left (or right) face be the main face
+However, that means we'll be working with columns in the left and right face while the upper and down face would be rows
+In this case, we wouldn't need to consider rotating rows because that can already be done using the front face as our main face
